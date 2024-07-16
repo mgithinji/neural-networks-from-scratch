@@ -1,6 +1,6 @@
 # Neural networks from scratch
 
-Following the [Neural Networks from Scratch](nnfs.io) textbook by Harrison Kinsley (aka [sentdex](youtube.com/sentdex)).
+Following the [Neural Networks from Scratch](https://nnfs.io) textbook by Harrison Kinsley (aka [sentdex](https://youtube.com/sentdex)).
 
 ## System and environment information
 MacBook Pro (15-inch, 2018)

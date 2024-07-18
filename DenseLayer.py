@@ -31,12 +31,29 @@ class ReLU(Activation):
     def forward(self, inputs):
         self.output = np.maximum(0, inputs)
 
+# Softmax activation funtion
+class Softmax(Activation):
+    def forward(self, inputs):
+        # calculating raw probabilities
+        # NOTE: we subtract the largest inputs before calc to mitigate "exploding values"
+        prob_raw = np.exp(inputs - np.max(inputs, axis=1, keepdims=True))
+        prob_norm = prob_raw = prob_raw / np.sum(prob_raw, axis=1, keepdims=True)
+        self.output = prob_norm
+
 X, y = spiral_data(samples=100, classes=3)
      
 dense1 = DenseLayer(n_inputs=2, n_neurons=3)
-dense1.forward(X)
-
 activation1 = ReLU()
-activation1.forward(dense1.output)
+dense2 = DenseLayer(n_inputs=3, n_neurons=3)
+activation2 = Softmax()
 
-print(activation1.output[:5])
+dense1.forward(X)
+activation1.forward(dense1.output)
+dense2.forward(activation1.output)
+activation2.forward(dense2.output)
+
+print(activation2.output[:5])
+
+softmax1 = Softmax()
+softmax1.forward([[1,2,3]])
+print(softmax1.output)

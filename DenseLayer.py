@@ -18,9 +18,6 @@ class DenseLayer:
 
 # abstract base class for activation functions
 class Activation(ABC):
-    def __init__(self) -> None:
-        super().__init__()
-        
     # forward pass
     @abstractmethod
     def forward(self):
@@ -39,6 +36,38 @@ class Softmax(Activation):
         prob_raw = np.exp(inputs - np.max(inputs, axis=1, keepdims=True))
         prob_norm = prob_raw = prob_raw / np.sum(prob_raw, axis=1, keepdims=True)
         self.output = prob_norm
+        
+# base Loss class
+class Loss(ABC):
+    # forward pass
+    @abstractmethod
+    def forward(self):
+        pass
+    
+    def calculate(self, output, y):
+        sample_losses = self.forward(output, y)
+        data_loss = np.mean(sample_losses)
+        return data_loss
+
+# categortical cross entropy loss class, inheriting from base loss class
+class CategoricalCrossEntropyLoss(Loss):
+    def forward(self, y_pred, y_true):
+        n_samples = len(y_pred) # num samples in batch
+        
+        # clip data on both sides to prevent division by 0 and shifting
+        y_pred_clipped = np.clip(y_pred, 1e-7, 1 - 1e-7)
+        
+        # adding a condition for one-hot encoded vs sparse target inputs
+        if len(y_true.shape) == 1: # sparse
+            target_confidence_scores = y_pred_clipped[range(n_samples), y_true]
+        elif len(y_true.shape) == 2: # one-hot encoded
+            target_confidence_scores = np.sum(y_pred_clipped * y_true, 
+                                              axis=1)
+        
+        negative_log_likelihoods = -np.log(target_confidence_scores)
+        return negative_log_likelihoods
+
+# building a network from our classes
 
 X, y = spiral_data(samples=100, classes=3)
      
@@ -46,6 +75,7 @@ dense1 = DenseLayer(n_inputs=2, n_neurons=3)
 activation1 = ReLU()
 dense2 = DenseLayer(n_inputs=3, n_neurons=3)
 activation2 = Softmax()
+loss_fn = CategoricalCrossEntropyLoss()
 
 dense1.forward(X)
 activation1.forward(dense1.output)
@@ -54,6 +84,6 @@ activation2.forward(dense2.output)
 
 print(activation2.output[:5])
 
-softmax1 = Softmax()
-softmax1.forward([[1,2,3]])
-print(softmax1.output)
+loss = loss_fn.calculate(output=activation2.output, y=y)
+
+print("loss: {}".format(loss))

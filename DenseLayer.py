@@ -3,6 +3,7 @@
 from nnfs.datasets import spiral_data
 import nnfs
 import numpy as np
+from abc import ABC, abstractmethod
 
 nnfs.init()
 
@@ -15,9 +16,27 @@ class DenseLayer:
     def forward(self, inputs):
         self.output = np.dot(inputs, self.weights) + self.biases
 
+# abstract base class for activation functions
+class Activation(ABC):
+    def __init__(self) -> None:
+        super().__init__()
+        
+    # forward pass
+    @abstractmethod
+    def forward(self):
+        pass
+
+# ReLU activation function
+class ReLU(Activation):
+    def forward(self, inputs):
+        self.output = np.maximum(0, inputs)
+
 X, y = spiral_data(samples=100, classes=3)
      
 dense1 = DenseLayer(n_inputs=2, n_neurons=3)
 dense1.forward(X)
 
-print(dense1.output[:5])
+activation1 = ReLU()
+activation1.forward(dense1.output)
+
+print(activation1.output[:5])

@@ -66,6 +66,17 @@ class CategoricalCrossEntropyLoss(Loss):
         
         negative_log_likelihoods = -np.log(target_confidence_scores)
         return negative_log_likelihoods
+    
+def calculate_accuracy(output, y):
+    # get the predictions in a single vector
+    predictions = np.argmax(output, axis=1)
+    
+    # convert one-hot encoded target inputs to a single vector
+    if len(y.shape) == 2:
+        y = np.argmax(y, axis=1)
+    
+    accuracy = np.mean(predictions == y)
+    return accuracy
 
 # building a network from our classes
 
@@ -85,5 +96,7 @@ activation2.forward(dense2.output)
 print(activation2.output[:5])
 
 loss = loss_fn.calculate(output=activation2.output, y=y)
+accuracy = calculate_accuracy(output=activation2.output, y=y)
 
 print("loss: {}".format(loss))
+print("accuracy: {}".format(accuracy))

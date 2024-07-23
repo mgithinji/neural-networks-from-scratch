@@ -1,4 +1,8 @@
-# coding the backpropagation method
+# coding the backpropagation method for a single neuron
+# NOTE: this is a rudimentary example to demonstrate the
+# how partial derivatives are backpropagated
+
+# single neuron with three inputs (and 3 weights) and ReLU activation
 
 # single neuron receiving three inputs (forward pass)
 x = [1.0, -2.0, 3.0] # inputs

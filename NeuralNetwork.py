@@ -121,7 +121,7 @@ class SoftmaxActivationCCELoss():
         
 # base optimizer class
 class Optimizer(ABC):
-    # updata parameters
+    # update parameters
     @abstractmethod
     def update_params(self):
         pass

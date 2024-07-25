@@ -119,6 +119,23 @@ class SoftmaxActivationCCELoss():
         self.dinputs[range(n_samples), y_true] -= 1 # calculating gradient
         self.dinputs = self.dinputs / n_samples # normalizing gradient
         
+# base optimizer class
+class Optimizer(ABC):
+    # updata parameters
+    @abstractmethod
+    def update_params(self):
+        pass
+
+# stochastic gradient descent optimizer
+class SGD(Optimizer):
+    def __init__(self, learning_rate=1.0) -> None:
+        super().__init__()
+        self.learning_rate = learning_rate
+    
+    # update parameters
+    def update_params(self, layer):
+        layer.weights += -self.learning_rate * layer.dweights
+        layer.biases += -self.learning_rate * layer.dbiases
 
 def calculate_accuracy(output, y):
     # get the predictions in a single vector

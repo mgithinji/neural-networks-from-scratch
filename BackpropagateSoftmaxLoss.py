@@ -1,5 +1,6 @@
 # testing the backward functions implemented in our Softmax and Loss classes
-from NeuralNetwork import DenseLayer, ReLU, Softmax, CategoricalCrossEntropyLoss, SoftmaxActivationCCELoss, calculate_accuracy
+from NeuralNetwork import (DenseLayer, ReLU, Softmax, 
+                           CategoricalCrossEntropyLoss, SoftmaxActivationCCELoss, calculate_accuracy)
 import numpy as np
 from timeit import timeit
 

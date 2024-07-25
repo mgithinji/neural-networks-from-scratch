@@ -1,82 +1,12 @@
-# coding a dense layer (or fully connected layer) class
+# coding the network from our created classes
 
 from nnfs.datasets import spiral_data
 import nnfs
 import numpy as np
-from abc import ABC, abstractmethod
+from NeuralNetwork import (DenseLayer, ReLU, Softmax, 
+                           CategoricalCrossEntropyLoss, SoftmaxActivationCCELoss, calculate_accuracy)
 
 nnfs.init()
-
-class DenseLayer:
-    # layer initialization
-    def __init__(self, n_inputs: int, n_neurons: int) -> None:
-        self.weights = 0.01 * np.random.randn(n_inputs, n_neurons)
-        self.biases = np.zeros((1, n_neurons))
-    
-    def forward(self, inputs):
-        self.output = np.dot(inputs, self.weights) + self.biases
-
-# abstract base class for activation functions
-class Activation(ABC):
-    # forward pass
-    @abstractmethod
-    def forward(self):
-        pass
-
-# ReLU activation function
-class ReLU(Activation):
-    def forward(self, inputs):
-        self.output = np.maximum(0, inputs)
-
-# Softmax activation funtion
-class Softmax(Activation):
-    def forward(self, inputs):
-        # calculating raw probabilities
-        # NOTE: we subtract the largest inputs before calc to mitigate "exploding values"
-        prob_raw = np.exp(inputs - np.max(inputs, axis=1, keepdims=True))
-        prob_norm = prob_raw = prob_raw / np.sum(prob_raw, axis=1, keepdims=True)
-        self.output = prob_norm
-        
-# base Loss class
-class Loss(ABC):
-    # forward pass
-    @abstractmethod
-    def forward(self):
-        pass
-    
-    def calculate(self, output, y):
-        sample_losses = self.forward(output, y)
-        data_loss = np.mean(sample_losses)
-        return data_loss
-
-# categortical cross entropy loss class, inheriting from base loss class
-class CategoricalCrossEntropyLoss(Loss):
-    def forward(self, y_pred, y_true):
-        n_samples = len(y_pred) # num samples in batch
-        
-        # clip data on both sides to prevent division by 0 and shifting
-        y_pred_clipped = np.clip(y_pred, 1e-7, 1 - 1e-7)
-        
-        # adding a condition for one-hot encoded vs sparse target inputs
-        if len(y_true.shape) == 1: # sparse
-            target_confidence_scores = y_pred_clipped[range(n_samples), y_true]
-        elif len(y_true.shape) == 2: # one-hot encoded
-            target_confidence_scores = np.sum(y_pred_clipped * y_true, 
-                                              axis=1)
-        
-        negative_log_likelihoods = -np.log(target_confidence_scores)
-        return negative_log_likelihoods
-    
-def calculate_accuracy(output, y):
-    # get the predictions in a single vector
-    predictions = np.argmax(output, axis=1)
-    
-    # convert one-hot encoded target inputs to a single vector
-    if len(y.shape) == 2:
-        y = np.argmax(y, axis=1)
-    
-    accuracy = np.mean(predictions == y)
-    return accuracy
 
 # building a network from our classes
 
@@ -85,18 +15,27 @@ X, y = spiral_data(samples=100, classes=3)
 dense1 = DenseLayer(n_inputs=2, n_neurons=3)
 activation1 = ReLU()
 dense2 = DenseLayer(n_inputs=3, n_neurons=3)
-activation2 = Softmax()
-loss_fn = CategoricalCrossEntropyLoss()
+loss_activation = SoftmaxActivationCCELoss() # combined softmax and loss fn
 
+# forward pass
 dense1.forward(X)
 activation1.forward(dense1.output)
 dense2.forward(activation1.output)
-activation2.forward(dense2.output)
+loss = loss_activation.forward(dense2.output, y)
+accuracy = calculate_accuracy(output=loss_activation.output, y=y)
 
-print(activation2.output[:5])
+print(loss_activation.output[:5]) # output of the first few samples
+print("loss: {}".format(loss)) # loss value
+print("accuracy: {}".format(accuracy)) # accuracy value
 
-loss = loss_fn.calculate(output=activation2.output, y=y)
-accuracy = calculate_accuracy(output=activation2.output, y=y)
+# backward pass
+loss_activation.backward(loss_activation.output, y)
+dense2.backward(loss_activation.dinputs)
+activation1.backward(dense2.dinputs)
+dense1.backward(activation1.dinputs)
 
-print("loss: {}".format(loss))
-print("accuracy: {}".format(accuracy))
+# print gradients
+print(dense1.dweights)
+print(dense1.dbiases)
+print(dense2.dweights)
+print(dense2.dbiases)

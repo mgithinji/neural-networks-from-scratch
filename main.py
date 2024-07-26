@@ -11,6 +11,9 @@ nnfs.init()
 # building a network from our classes
 
 X, y = spiral_data(samples=100, classes=3)
+
+print(X[:5])
+print()
      
 dense1 = DenseLayer(n_inputs=2, n_neurons=3)
 activation1 = ReLU()

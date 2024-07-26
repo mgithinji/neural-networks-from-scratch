@@ -128,14 +128,26 @@ class Optimizer(ABC):
 
 # stochastic gradient descent optimizer
 class SGD(Optimizer):
-    def __init__(self, learning_rate=1.0) -> None:
+    def __init__(self, learning_rate=1.0, decay=0.0) -> None:
         super().__init__()
         self.learning_rate = learning_rate
+        self.current_learning_rate = learning_rate
+        self.decay = decay  
+        self.iterations = 0
+        
+    # to be called once before any parameter updates
+    def pre_update_params(self):
+        if self.decay:
+            self.current_learning_rate = self.learning_rate * (1.0 / (1.0 + self.iterations))
     
     # update parameters
     def update_params(self, layer):
-        layer.weights += -self.learning_rate * layer.dweights
-        layer.biases += -self.learning_rate * layer.dbiases
+        layer.weights += -self.current_learning_rate * layer.dweights
+        layer.biases += -self.current_learning_rate * layer.dbiases
+        
+    # to be called after any parameter updates
+    def post_update_params(self):
+        self.iterations += 1
 
 def calculate_accuracy(output, y):
     # get the predictions in a single vector

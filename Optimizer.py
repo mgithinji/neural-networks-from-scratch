@@ -12,12 +12,15 @@ nnfs.init()
 # data
 X, y = spiral_data(samples=100, classes=3)
 
+print(X[:5])
+print()
+
 # network
 dense1 = DenseLayer(2, 64)
 activation1 = ReLU()
 dense2 = DenseLayer(64, 3)
 loss_activation = SoftmaxActivationCCELoss()
-optimizer = SGD()
+optimizer = SGD(decay=1e-2)
 
 # training in a loop
 for epoch in range(10001):
@@ -29,8 +32,9 @@ for epoch in range(10001):
     loss = loss_activation.forward(dense2.output, y)
     accuracy = calculate_accuracy(loss_activation.output, y)
 
-    if not epoch % 100:
-        print("epoch: {}, loss: {}, acc: {}".format(epoch, loss, accuracy))
+    if not epoch % 1000:
+        print("epoch: {}, acc: {}, loss: {}, lr: {}".format(epoch, accuracy, loss, 
+                                                            optimizer.current_learning_rate))
 
     # backward pass
     loss_activation.backward(loss_activation.output, y)
@@ -39,5 +43,7 @@ for epoch in range(10001):
     dense1.backward(activation1.dinputs)
 
     # update weights and biases
+    optimizer.pre_update_params()
     optimizer.update_params(dense1)
     optimizer.update_params(dense2)
+    optimizer.post_update_params()

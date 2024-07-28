@@ -20,7 +20,7 @@ dense1 = DenseLayer(2, 64)
 activation1 = ReLU()
 dense2 = DenseLayer(64, 3)
 loss_activation = SoftmaxActivationCCELoss()
-optimizer = SGD(decay=1e-2)
+optimizer = SGD(decay=1e-3)
 
 # training in a loop
 for epoch in range(10001):

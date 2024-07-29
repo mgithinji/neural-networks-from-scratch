@@ -5,22 +5,22 @@ import nnfs
 import numpy as np
 from NeuralNetwork import (DenseLayer, ReLU, Softmax, 
                            CategoricalCrossEntropyLoss, 
-                           SoftmaxActivationCCELoss, SGD, calculate_accuracy)
+                           SoftmaxActivationCCELoss, SGD, AdaGrad, RMSProp,
+                           calculate_accuracy)
 
 nnfs.init()
 
 # data
 X, y = spiral_data(samples=100, classes=3)
 
-print(X[:5])
-print()
-
 # network
 dense1 = DenseLayer(2, 64)
 activation1 = ReLU()
 dense2 = DenseLayer(64, 3)
 loss_activation = SoftmaxActivationCCELoss()
-optimizer = SGD(decay=1e-3)
+# optimizer = SGD(decay=1e-3, momentum=0.9)
+# optimizer = AdaGrad(decay=1e-4)
+optimizer = RMSProp(decay=1e-5, learning_rate=0.02, rho=0.999)
 
 # training in a loop
 for epoch in range(10001):
@@ -33,7 +33,7 @@ for epoch in range(10001):
     accuracy = calculate_accuracy(loss_activation.output, y)
 
     if not epoch % 1000:
-        print("epoch: {}, acc: {}, loss: {}, lr: {}".format(epoch, accuracy, loss, 
+        print("epoch: {}, acc: {:.3f}, loss: {:.3f}, lr: {:.4f}".format(epoch, accuracy, loss, 
                                                             optimizer.current_learning_rate))
 
     # backward pass

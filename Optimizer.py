@@ -5,7 +5,7 @@ import nnfs
 import numpy as np
 from NeuralNetwork import (DenseLayer, ReLU, Softmax, 
                            CategoricalCrossEntropyLoss, 
-                           SoftmaxActivationCCELoss, SGD, AdaGrad, RMSProp,
+                           SoftmaxActivationCCELoss, SGD, AdaGrad, RMSProp, Adam,
                            calculate_accuracy)
 
 nnfs.init()
@@ -20,7 +20,8 @@ dense2 = DenseLayer(64, 3)
 loss_activation = SoftmaxActivationCCELoss()
 # optimizer = SGD(decay=1e-3, momentum=0.9)
 # optimizer = AdaGrad(decay=1e-4)
-optimizer = RMSProp(decay=1e-5, learning_rate=0.02, rho=0.999)
+# optimizer = RMSProp(decay=1e-5, learning_rate=0.02, rho=0.999)
+optimizer = Adam(learning_rate=0.05, decay=5e-7)
 
 # training in a loop
 for epoch in range(10001):
@@ -47,3 +48,15 @@ for epoch in range(10001):
     optimizer.update_params(dense1)
     optimizer.update_params(dense2)
     optimizer.post_update_params()
+    
+# test data
+X_test, y_test = spiral_data(samples=100, classes=3)
+
+# forward pass
+dense1.forward(X_test)
+activation1.forward(dense1.output)
+dense2.forward(activation1.output)
+loss = loss_activation.forward(dense2.output, y_test)
+accuracy = calculate_accuracy(loss_activation.output, y_test)
+
+print("Validation - acc: {:.3f}, loss: {:.3f}".format(accuracy, loss))

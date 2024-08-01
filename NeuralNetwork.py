@@ -5,10 +5,19 @@ from abc import ABC, abstractmethod
 
 class DenseLayer:
     # layer initialization
-    def __init__(self, n_inputs: int, n_neurons: int) -> None:
+    def __init__(self, n_inputs: int, n_neurons: int,
+                 lambda_l1w=0, lambda_l2w=0, 
+                 lambda_l1b=0, lambda_l2b=0) -> None:
+        # initializing weights and biases
         self.weights = 0.01 * np.random.randn(n_inputs, n_neurons)
         self.biases = np.zeros((1, n_neurons))
     
+        # setting regularization strength
+        self.lambda_l1w = lambda_l1w
+        self.lambda_l2w = lambda_l2w
+        self.lambda_l1b = lambda_l1b
+        self.lambda_l2b = lambda_l2b
+        
     def forward(self, inputs):
         self.inputs = inputs
         self.output = np.dot(inputs, self.weights) + self.biases        
@@ -16,6 +25,29 @@ class DenseLayer:
     def backward(self, dvalues):
         self.dweights = np.dot(self.inputs.T, dvalues)
         self.dbiases = np.sum(dvalues, axis=0, keepdims=True)
+        
+        # gradients on regularization
+        # L1 regularization on weights
+        if self.lambda_l1w > 0:
+            dL1 = np.ones_like(self.weights)
+            dL1[self.weights < 0] = -1
+            self.dweights += self.lambda_l1w * dL1
+        
+        # L2 regularization on weights   
+        if self.lambda_l2w > 0:
+            self.dweights += 2 * self.lambda_l2w * self.weights
+            
+        # L1 regularization on biases
+        if self.lambda_l1b > 0:
+            dL1 = np.ones_like(self.biases)
+            dL1[self.biases < 0] = -1
+            self.dbiases += self.lambda_l1b * dL1
+            
+        # L2 regularization on biases
+        if self.lambda_l2b > 0:
+            self.dbiases += 2 * self.lambda_l2b * self.biases
+            
+        # gradient on values
         self.dinputs = np.dot(dvalues, self.weights.T)
 
 # abstract base class for activation functions
@@ -67,6 +99,28 @@ class Loss(ABC):
         sample_losses = self.forward(output, y)
         data_loss = np.mean(sample_losses)
         return data_loss
+    
+    def regularization_loss(self, layer):
+        # regularization loss is 0 by default
+        regularization_loss = 0
+        
+        # L1 regularization - weights
+        if layer.lambda_l1w > 0:
+            regularization_loss += layer.lambda_l1w * np.sum(np.abs(layer.weights))
+            
+        # L2 regularization - weights
+        if layer.lambda_l2w > 0:
+            regularization_loss += layer.lambda_l2w * np.sum(layer.weights * layer.weights)
+            
+        # L1 regularization - biases
+        if layer.lambda_l1b > 0:
+            regularization_loss += layer.lambda_l1b * np.sum(np.abs(layer.biases))
+            
+        # L2 regularization - biases
+        if layer.lambda_l2b > 0:
+            regularization_loss += layer.lambda_l2b * np.sum(layer.biases * layer.biases)
+            
+        return regularization_loss
 
 # categortical cross entropy loss class, inheriting from base loss class
 class CategoricalCrossEntropyLoss(Loss):

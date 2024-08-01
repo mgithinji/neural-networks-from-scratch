@@ -50,6 +50,21 @@ class DenseLayer:
         # gradient on values
         self.dinputs = np.dot(dvalues, self.weights.T)
 
+# creating the Dropout layer class
+class Dropout:
+    def __init__(self, rate) -> None:
+        self.rate = 1 - rate
+        
+    # forward pass
+    def forward(self, inputs):
+        self.inputs = inputs # save input values
+        self.binary_mask = np.random.binomial(n=1, p=self.rate, size=inputs.shape) / self.rate        
+        self.output = inputs * self.binary_mask # apply mask to input values
+        
+    # backward pass
+    def backward(self, dvalues):
+        self.dinputs = dvalues * self.binary_mask
+
 # abstract base class for activation functions
 class Activation(ABC):
     # forward pass

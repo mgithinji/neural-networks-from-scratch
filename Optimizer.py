@@ -38,8 +38,10 @@ for epoch in range(10001):
     accuracy = calculate_accuracy(loss_activation.output, y)
 
     if not epoch % 1000:
-        print("epoch: {}, acc: {:.3f}, loss: {:.3f} (data loss: {:.3f}, reg loss: {:.3f}), lr: {:.4f}".format(epoch, accuracy, loss, data_loss, 
-                                                                                               regularization_loss, optimizer.current_learning_rate))
+        print(f"epoch: {epoch}, " + 
+              f"acc: {accuracy:.3f}, " + 
+              f"loss: {loss:.3f} (data loss: {data_loss:.3f}, reg loss: {regularization_loss:.3f}), " +
+              f"lr: {optimizer.current_learning_rate:.3f}")
 
     # backward pass
     loss_activation.backward(loss_activation.output, y)

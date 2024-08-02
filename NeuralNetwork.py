@@ -71,6 +71,11 @@ class Activation(ABC):
     @abstractmethod
     def forward(self):
         pass
+    
+    # backward pass
+    @abstractmethod
+    def backward(self):
+        pass
 
 # ReLU activation function
 class ReLU(Activation):
@@ -101,13 +106,28 @@ class Softmax(Activation):
             
             # calculating the sample-wise gradient and adding it to the sample gradients
             self.dinputs[i] = np.dot(jacobian, i_dvalues)
-            
+
+# sigmoid activation - commonly used in binary logistic regression
+class Sigmoid(Activation):
+    # forward pass
+    def forward(self, inputs):
+        self.inputs = inputs # saving inputs
+        self.output = 1 / (1 + np.exp(-inputs))
+    
+    # backward pass
+    def backward(self, dvalues):
+        self.dinputs = dvalues * (1 - self.output) * self.output
         
 # base Loss class
 class Loss(ABC):
     # forward pass
     @abstractmethod
     def forward(self):
+        pass
+    
+    # backward pass
+    @abstractmethod
+    def backward(self):
         pass
     
     def calculate(self, output, y):
@@ -166,7 +186,7 @@ class CategoricalCrossEntropyLoss(Loss):
         self.dinputs = -y_true / dvalues # calculate gradient
         self.dinputs = self.dinputs / n_samples # normalize gradient
 
-# combined Softmax and CCE loss class
+# combined Softmax and Categorical Cross Entropy loss class
 class SoftmaxActivationCCELoss():
     def __init__(self) -> None:
         self.activation = Softmax()
@@ -187,7 +207,26 @@ class SoftmaxActivationCCELoss():
         self.dinputs = dvalues.copy()
         self.dinputs[range(n_samples), y_true] -= 1 # calculating gradient
         self.dinputs = self.dinputs / n_samples # normalizing gradient
+
+# binary cross entropy loss class
+class BinaryCrossEntropyLoss(Loss):
+    # forward pass
+    def forward(self, y_pred, y_true):
+        y_pred_clipped = np.clip(y_pred, 1e-7, 1 - 1e-7)
+        sample_losses = -((y_true * np.log(y_pred_clipped)) + ((1 - y_true) * np.log(1 - y_pred_clipped)))
+        sample_losses = np.mean(sample_losses, axis=-1)        
+        return sample_losses
+    
+    # backward pass
+    def backward(self, dvalues, y_true):
+        n_samples = len(dvalues) # number of samples
+        n_outputs = len(dvalues[0]) # number of outputs in the sample
+        dvalues_clipped = np.clip(dvalues, 1e-7, 1 - 1e-7)
         
+        # calculating gradient
+        self.dinputs = -((y_true / dvalues_clipped) - ((1 - y_true) / (1 - dvalues_clipped))) / n_outputs
+        self.dinputs = self.dinputs / n_samples
+
 # base optimizer class
 class Optimizer(ABC):
     # update parameters

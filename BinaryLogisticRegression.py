@@ -10,7 +10,7 @@ from NeuralNetwork import (DenseLayer, ReLU, Softmax, Sigmoid, Dropout,
 
 nnfs.init()
 
-# data
+# testing data
 X, y = spiral_data(samples=100, classes=2)
 
 # reshaping our labels to work with a binary logistic regression classifier - labels are currently sparse
@@ -22,7 +22,7 @@ activation1 = ReLU()
 dense2 = DenseLayer(64, 1)
 activation2 = Sigmoid()
 loss_fn = BinaryCrossEntropyLoss()
-optimizer = Adam(decay=5e-5)
+optimizer = Adam(decay=5e-7)
 
 # training in a loop
 for epoch in range(10001):

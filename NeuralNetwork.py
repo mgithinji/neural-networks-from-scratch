@@ -117,7 +117,18 @@ class Sigmoid(Activation):
     # backward pass
     def backward(self, dvalues):
         self.dinputs = dvalues * (1 - self.output) * self.output
-        
+
+# linear activation - commonly used in regression
+class Linear(Activation):
+    # forward pass
+    def forward(self, inputs):
+        self.inputs = inputs # saving values
+        self.output = inputs
+    
+    # backward pass
+    def backward(self, dvalues):
+        self.dinputs = dvalues.copy()
+
 # base Loss class
 class Loss(ABC):
     # forward pass
@@ -225,6 +236,38 @@ class BinaryCrossEntropyLoss(Loss):
         
         # calculating gradient
         self.dinputs = -((y_true / dvalues_clipped) - ((1 - y_true) / (1 - dvalues_clipped))) / n_outputs
+        self.dinputs = self.dinputs / n_samples
+        
+# mean squared error loss class
+class MeanSquaredErrorLoss(Loss):
+    # forward pass
+    def forward(self, y_pred, y_true):
+        sample_losses = np.mean((y_true - y_pred) ** 2, axis=-1)
+        return sample_losses
+    
+    # backward pass
+    def backward(self, dvalues, y_true):
+        n_samples = len(dvalues) # number of samples
+        n_outputs = len(dvalues[0]) # number of outputs in every sample
+        
+        # gradient on values
+        self.dinputs = -2 * (y_true - dvalues) / n_outputs
+        self.dinputs = self.dinputs / n_samples # normalizing gradient
+        
+# mean absolute error loss class
+class MeanAbsoluteErrorLoss(Loss):
+    # forward pass
+    def forward(self, y_pred, y_true):
+        sample_losses = np.mean(np.abs(y_true - y_pred), axis=-1)
+        return sample_losses
+    
+    # backward pass
+    def backward(self, dvalues, y_true):
+        n_samples = len(dvalues)
+        n_outputs = len(dvalues[0])
+        
+        # calculating gradient
+        self.dinputs = np.sign(y_true - dvalues) / n_outputs
         self.dinputs = self.dinputs / n_samples
 
 # base optimizer class

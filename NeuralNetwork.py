@@ -9,7 +9,7 @@ class DenseLayer:
                  lambda_l1w=0, lambda_l2w=0, 
                  lambda_l1b=0, lambda_l2b=0) -> None:
         # initializing weights and biases
-        self.weights = 0.01 * np.random.randn(n_inputs, n_neurons)
+        self.weights = 0.1 * np.random.randn(n_inputs, n_neurons)
         self.biases = np.zeros((1, n_neurons))
     
         # setting regularization strength

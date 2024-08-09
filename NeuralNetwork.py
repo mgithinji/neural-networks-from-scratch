@@ -76,16 +76,27 @@ class Activation(ABC):
     @abstractmethod
     def backward(self):
         pass
+    
+    # returning predictions
+    @abstractmethod
+    def predictions(self):
+        pass
 
 # ReLU activation function
 class ReLU(Activation):
+    # forward pass
     def forward(self, inputs):
         self.inputs = inputs
         self.output = np.maximum(0, inputs)
     
+    # backward pass
     def backward(self, dvalues):
         self.dinputs = dvalues.copy()
         self.dinputs[self.inputs <= 0] = 0
+    
+    # calculate predictions for outputs
+    def predictions(self, outputs):
+        return outputs
 
 # Softmax activation funtion
 class Softmax(Activation):
@@ -106,6 +117,10 @@ class Softmax(Activation):
             
             # calculating the sample-wise gradient and adding it to the sample gradients
             self.dinputs[i] = np.dot(jacobian, i_dvalues)
+    
+    # calculate predictions for outputs
+    def predictions(self, outputs):
+        return np.argmax(outputs, axis=1)
 
 # sigmoid activation - commonly used in binary logistic regression
 class Sigmoid(Activation):
@@ -117,6 +132,10 @@ class Sigmoid(Activation):
     # backward pass
     def backward(self, dvalues):
         self.dinputs = dvalues * (1 - self.output) * self.output
+        
+    # calculate predictions for outputs
+    def predictions(self, outputs):
+        return (outputs > 0.5) * 1
 
 # linear activation - commonly used in regression
 class Linear(Activation):
@@ -128,6 +147,10 @@ class Linear(Activation):
     # backward pass
     def backward(self, dvalues):
         self.dinputs = dvalues.copy()
+    
+    # calculate predictions for outputs
+    def predictions(self, outputs):
+        return outputs
 
 # base Loss class
 class Loss(ABC):
@@ -141,30 +164,37 @@ class Loss(ABC):
     def backward(self):
         pass
     
+    # set/remember trainable layers
+    def remember_trainable_layers(self, trainable_layers):
+        self.trainable_layers = trainable_layers
+    
     def calculate(self, output, y):
         sample_losses = self.forward(output, y)
         data_loss = np.mean(sample_losses)
-        return data_loss
+        return data_loss, self.regularization_loss()
     
-    def regularization_loss(self, layer):
+    def regularization_loss(self):
         # regularization loss is 0 by default
         regularization_loss = 0
         
-        # L1 regularization - weights
-        if layer.lambda_l1w > 0:
-            regularization_loss += layer.lambda_l1w * np.sum(np.abs(layer.weights))
-            
-        # L2 regularization - weights
-        if layer.lambda_l2w > 0:
-            regularization_loss += layer.lambda_l2w * np.sum(layer.weights * layer.weights)
-            
-        # L1 regularization - biases
-        if layer.lambda_l1b > 0:
-            regularization_loss += layer.lambda_l1b * np.sum(np.abs(layer.biases))
-            
-        # L2 regularization - biases
-        if layer.lambda_l2b > 0:
-            regularization_loss += layer.lambda_l2b * np.sum(layer.biases * layer.biases)
+        # calculate regularization loss by iterating over all trainable layers
+        for layer in self.trainable_layers:
+        
+            # L1 regularization - weights
+            if layer.lambda_l1w > 0:
+                regularization_loss += layer.lambda_l1w * np.sum(np.abs(layer.weights))
+                
+            # L2 regularization - weights
+            if layer.lambda_l2w > 0:
+                regularization_loss += layer.lambda_l2w * np.sum(layer.weights * layer.weights)
+                
+            # L1 regularization - biases
+            if layer.lambda_l1b > 0:
+                regularization_loss += layer.lambda_l1b * np.sum(np.abs(layer.biases))
+                
+            # L2 regularization - biases
+            if layer.lambda_l2b > 0:
+                regularization_loss += layer.lambda_l2b * np.sum(layer.biases * layer.biases)
             
         return regularization_loss
 

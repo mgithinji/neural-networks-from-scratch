@@ -2,9 +2,6 @@
 import os
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
-
-np.set_printoptions(linewidth=200)
 
 def load_mnist_dataset(dataset, path):
     # scanning all directories and creating a list of labels
@@ -30,8 +27,3 @@ def create_mnist_dataset(path):
     
     # return all
     return X, y, X_test, y_test
-
-X, y, X_test, y_test = create_mnist_dataset("fashion_mnist_images")
-
-plt.imshow(X[0])
-plt.show()

@@ -53,7 +53,7 @@ model.finalize()
 # train the model
 model.train(X, y, validation_data=(X_test, y_test), epochs=10, batch_size=128, print_every=100)
 
-# retrive and print parameters
+# retrive parameters
 parameters = model.get_parameters()
 
 #############################################################
@@ -81,8 +81,14 @@ model.set(
 # finalize model
 model.finalize()
 
-# set model with parameters instead of training
+# set model with stored parameters instead of training
 model.set_parameters(parameters)
 
 # evaluate the model
 model.evaluate(X_test, y_test)
+
+# save model parameters to file
+model.save_parameters("fashion_mnist.params")
+
+# save model to file
+model.save("fashion_mnist.model")

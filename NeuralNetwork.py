@@ -2,6 +2,8 @@
 
 import numpy as np
 from abc import ABC, abstractmethod
+import pickle
+import copy
 
 # input layer class
 class InputLayer:
@@ -796,3 +798,42 @@ class Model:
     def set_parameters(self, parameters):
         for parameter_set, layer in zip(parameters, self.trainable_layers):
             layer.set_parameters(*parameter_set)
+            
+    # save parameters to a file
+    def save_parameters(self, path):
+        with open(path, 'wb') as f:
+            pickle.dump(self.get_parameters(), f)
+            
+    # load parameters to a model from a file
+    def load_parameters(self, path):
+        with open(path, 'rb') as f:
+            self.set_parameters(pickle.load(f))
+    
+    # save entire model
+    def save(self, path):
+        # make a deep copy of the current model instance
+        model = copy.deepcopy(self)
+        
+        # reset accumulated values in loss and accuracy objects
+        model.loss.new_pass()
+        model.accuracy.new_pass()
+        
+        # remove data from input layer and gradients from the loss object
+        model.input_layer.__dict__.pop('output', None)
+        model.loss.__dict__.pop('dinputs', None)
+        
+        # for each layer remove input, output, and gradient properties
+        for layer in model.layers:
+            for property in ['inputs', 'output', 'dinputs', 'dweights', 'dbiases']:
+                layer.__dict__.pop(property, None)
+                
+        # save the model
+        with open(path, 'wb') as f:
+            pickle.dump(model, f)
+            
+    # loads a model from file and returns it as an object
+    @staticmethod
+    def load(path):
+        with open(path, 'rb') as f:
+            model = pickle.load(f)
+        return model
